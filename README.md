@@ -44,6 +44,5 @@ Detailed docs: `DOCS.md` and interactive UI at `docs/index.html`.
 You can view the Live documentation UI at:
 
 ```
-http://127.0.0.1:8000/docs/index.html
+https://bee-jay80.github.io/String-Analyzer-Service/
 ```
-
