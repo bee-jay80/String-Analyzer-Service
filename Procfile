@@ -1,1 +1,1 @@
-web: gunicorn Analyzer.wsgi:application
+web: gunicorn Analyzer.wsgi
