@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>String Analyzer Service — API Documentation</title>
+  <style>
+    :root{
+      --bg: #0f1724; /* dark blue-gray */
+      --card: #0b1220;
+      --muted: #9aa5b1;
+      --accent: #60a5fa; /* soft blue */
+      --accent-2: #7c3aed; /* violet for highlights */
+      --text: #e6eef6;
+      --success: #34d399; /* green */
+      --danger: #fb7185; /* red */
+      --mono: "Segoe UI", Roboto, -apple-system, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{font-family:var(--mono);background:linear-gradient(180deg,var(--bg),#071025);color:var(--text);margin:0;padding:24px}
+    header{display:flex;align-items:center;gap:16px}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700}
+    h1{margin:0;font-size:20px}
+    .layout{display:grid;grid-template-columns:280px 1fr;gap:20px;margin-top:20px}
+    nav{background:var(--card);padding:18px;border-radius:12px;height:calc(100vh - 140px);overflow:auto}
+    nav a{display:block;color:var(--text);text-decoration:none;padding:8px;border-radius:8px;margin-bottom:6px}
+    nav a:hover{background:rgba(255,255,255,0.02)}
+    main{padding:18px;background:rgba(255,255,255,0.02);border-radius:12px;min-height:60vh}
+    section h2{margin-top:0}
+    .endpoint{background:#071527;padding:14px;border-radius:10px;margin-bottom:12px;border-left:4px solid rgba(255,255,255,0.02)}
+    .method{display:inline-block;background:rgba(255,255,255,0.04);padding:6px 10px;border-radius:6px;font-weight:600;margin-right:8px}
+    .get{color:var(--success);border:1px solid rgba(52,211,153,0.12)}
+    .post{color:var(--accent);border:1px solid rgba(96,165,250,0.12)}
+    .delete{color:var(--danger);border:1px solid rgba(251,113,133,0.12)}
+    pre{background:#021024;padding:12px;border-radius:8px;overflow:auto}
+    .muted{color:var(--muted)}
+    footer{margin-top:24px;color:var(--muted);font-size:13px}
+    .pill{display:inline-block;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:8px;margin-right:6px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">SA</div>
+    <div>
+      <h1>String Analyzer Service — API Docs</h1>
+      <div class="muted">Clear, simple REST endpoints to analyze and query strings</div>
+    </div>
+  </header>
+  <div class="layout">
+    <nav>
+      <a href="#create">POST /strings/ — Create and analyze</a>
+      <a href="#list">GET /strings/ — List with filters</a>
+      <a href="#get">GET /strings/{string_value} — Retrieve</a>
+      <a href="#delete">DELETE /strings/{string_value} — Delete</a>
+      <a href="#nl">GET /strings/filter-by-natural-language — Natural language filters</a>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0"/>
+      <a href="#examples">Examples & Tests</a>
+      <a href="#notes">Notes & Migration</a>
+    </nav>
+    <main>
+      <section id="create">
+        <h2>POST /strings/</h2>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <strong>Creates an analyzed string</strong>
+          <div class="muted">Request body: application/json</div>
+        </div>
+        <h3>Request</h3>
+        <pre>{
+  "value": "string to analyze"
+}</pre>
+        <h3>Success Response (201 Created)</h3>
+        <pre>{
+  "id": "sha256_hash_value",
+  "value": "string to analyze",
+  "properties": {
+    "length": 16,
+    "is_palindrome": false,
+    "unique_characters": 12,
+    "word_count": 3,
+    "sha256_hash": "abc123...",
+    "character_frequency_map": {"s":2, "t":3}
+  },
+  "created_at": "2025-08-27T10:00:00Z"
+}</pre>
+        <h3>Errors</h3>
+        <ul>
+          <li>400 Bad Request — missing or invalid body</li>
+          <li>409 Conflict — string already exists</li>
+          <li>422 Unprocessable Entity — wrong data type</li>
+        </ul>
+      </section>
+
+      <section id="list">
+        <h2>GET /strings/</h2>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <strong>List stored strings — supports filters</strong>
+        </div>
+        <h3>Query parameters</h3>
+        <ul>
+          <li><span class="pill">is_palindrome</span> boolean (true|false)</li>
+          <li><span class="pill">min_length</span> integer (inclusive)</li>
+          <li><span class="pill">max_length</span> integer (inclusive)</li>
+          <li><span class="pill">word_count</span> integer (exact)</li>
+          <li><span class="pill">contains_character</span> single character</li>
+        </ul>
+        <h3>Example request</h3>
+        <pre>GET /strings/?is_palindrome=true&min_length=5&max_length=20&word_count=2&contains_character=a</pre>
+        <h3>Response (200 OK)</h3>
+        <pre>{
+  "data": [ /* array of items */ ],
+  "count": 15,
+  "filters_applied": { /* the query params as sent */ }
+}</pre>
+      </section>
+
+      <section id="get">
+        <h2>GET /strings/{string_value}</h2>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <strong>Retrieve analyzed string by exact raw value</strong>
+        </div>
+        <h3>Response (200 OK)</h3>
+        <pre>{ /* same shape as create response */ }</pre>
+        <h3>Errors</h3>
+        <ul>
+          <li>404 Not Found — string does not exist</li>
+        </ul>
+      </section>
+
+      <section id="delete">
+        <h2>DELETE /strings/{string_value}</h2>
+        <div class="endpoint">
+          <span class="method delete">DELETE</span>
+          <strong>Delete an analyzed string by value</strong>
+        </div>
+        <h3>Response</h3>
+        <pre>204 No Content</pre>
+        <h3>Errors</h3>
+        <ul>
+          <li>404 Not Found — string does not exist</li>
+        </ul>
+      </section>
+
+      <section id="nl">
+        <h2>GET /strings/filter-by-natural-language</h2>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <strong>Filter using a small natural language heuristic</strong>
+        </div>
+        <h3>Query</h3>
+        <pre>?query=all%20single%20word%20palindromic%20strings</pre>
+        <h3>Interpreted Response</h3>
+        <pre>{
+  "data": [ /* array */ ],
+  "count": 3,
+  "interpreted_query": {
+    "original": "all single word palindromic strings",
+    "parsed_filters": { "word_count": 1, "is_palindrome": true }
+  }
+}</pre>
+        <h3>Errors</h3>
+        <ul>
+          <li>400 Bad Request — unable to parse or missing query</li>
+          <li>422 Unprocessable Entity — parsed but contradictory filters</li>
+        </ul>
+      </section>
+
+      <section id="examples">
+        <h2>Examples & Tests</h2>
+        <p class="muted">Use these curl snippets to test the API locally.</p>
+        <h3>Create</h3>
+        <pre>curl -X POST http://127.0.0.1:8000/strings/ \
+  -H "Content-Type: application/json" \
+  -d '{"value":"racecar"}'</pre>
+        <h3>List with filters</h3>
+        <pre>curl "http://127.0.0.1:8000/strings/?is_palindrome=true&min_length=5"</pre>
+        <h3>Get specific</h3>
+        <pre>curl "http://127.0.0.1:8000/strings/racecar/"</pre>
+        <h3>Natural language</h3>
+        <pre>curl "http://127.0.0.1:8000/strings/filter-by-natural-language/?query=all%20single%20word%20palindromic%20strings"</pre>
+      </section>
+
+      <section id="notes">
+        <h2>Notes & Migration</h2>
+        <ul>
+          <li>Primary key `id` uses SHA-256 of the original value. Duplicate value creation will fail with 409.</li>
+          <li>Changing PKs or populating existing rows requires careful migrations if other tables reference this model.</li>
+          <li>CSRF: Session-authenticated POSTs require a CSRF token. For API usage prefer token/JWT auth in production.</li>
+        </ul>
+      </section>
+
+      <footer>
+        <div>Generated docs — update as API evolves. Link to full markdown docs in project root: <code>DOCS.md</code></div>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
